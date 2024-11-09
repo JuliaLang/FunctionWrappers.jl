@@ -1,7 +1,7 @@
 # FunctionWrappers.jl: Type stable and efficient wrapper of arbitrary functions
 
 [![Build Status](https://github.com/yuyichao/FunctionWrappers.jl/workflows/CI/badge.svg)](https://github.com/JuliaLang/FunctionWrappers.jl/actions)
-[![codecov.io]([![codecov](https://codecov.io/gh/JuliaLang/FunctionWrappers.jl/graph/badge.svg?token=aws4t0lJ1E)](https://codecov.io/gh/JuliaLang/FunctionWrappers.jl))](http://codecov.io/github/JuliaLang/FunctionWrappers.jl?branch=master)
+[![codecov](https://codecov.io/gh/JuliaLang/FunctionWrappers.jl/graph/badge.svg?token=aws4t0lJ1E)](https://codecov.io/gh/JuliaLang/FunctionWrappers.jl)
 
 Proof of principle implementation of [JuliaLang/julia#13984](https://github.com/JuliaLang/julia/issues/13984).
 
