@@ -21,14 +21,12 @@ jobs:
           - windows-latest
         arch:
           - x64
-          - x86
-        # 32-bit Julia binaries are not available on macOS
-        exclude:
-          - os: macOS-latest
-            arch: x86
         include:
           - os: macOS-latest
             arch: aarch64
+            version: 1
+          - os: ubuntu-latest
+            arch: x86
             version: 1
           - os: ubuntu-latest
             arch: x64
@@ -40,6 +38,7 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
