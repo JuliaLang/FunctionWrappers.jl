@@ -91,3 +91,14 @@ end
     v = InlineRefStruct([1, 2, 3])
     @test @inferred(f(v)) === v
 end
+
+@testset "FunctionWrapper is public API" begin
+    # Public, but deliberately not exported: `using FunctionWrappers` must not
+    # introduce the name into the caller's namespace, since `FunctionWrapper` is a
+    # common enough identifier to collide.
+    @test !Base.isexported(FunctionWrappers, :FunctionWrapper)
+    @static if VERSION >= v"1.11"
+        @test Base.ispublic(FunctionWrappers, :FunctionWrapper)
+        @test :FunctionWrapper in names(FunctionWrappers)
+    end
+end
