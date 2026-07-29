@@ -88,6 +88,19 @@ end
 Base.convert(::Type{T}, obj) where {T<:FunctionWrapper} = T(obj)
 Base.convert(::Type{T}, obj::T) where {T<:FunctionWrapper} = obj
 
+# `FunctionWrapper` is this package's entire user-facing API, but it has never been
+# exported or marked public, so every caller reaches it as a qualified access into an
+# undeclared name. Tooling that audits public-API boundaries (ExplicitImports.jl) flags
+# those, and downstream packages carry ignore entries for this one specifically.
+#
+# `public` is a Julia 1.11 keyword and a parse error on older versions, so it goes
+# through `Meta.parse` behind a `@static if`. Nothing changes for Julia < 1.11, and
+# nothing is exported on any version: `FunctionWrappers.FunctionWrapper` and
+# `import FunctionWrappers: FunctionWrapper` keep working exactly as before.
+@static if VERSION >= v"1.11"
+    eval(Meta.parse("public FunctionWrapper"))
+end
+
 @noinline function reinit_wrapper(f::FunctionWrapper{Ret,Args}) where {Ret,Args}
     objref = f.obj
     objT = f.objT
