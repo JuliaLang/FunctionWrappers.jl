@@ -122,7 +122,7 @@ end
             @assert ptr != C_NULL
         end
         objptr = f.objptr
-        ccall(ptr, $(map_rettype(Ret)),
+        GC.@preserve f ccall(ptr, $(map_rettype(Ret)),
               (Ptr{Cvoid}, $((map_argtype(Arg) for Arg in Args.parameters)...)),
               objptr, $((:(convert($(Args.parameters[i]), args[$i]))
                          for i in 1:length(Args.parameters))...))
