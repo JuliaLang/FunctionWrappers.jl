@@ -92,6 +92,16 @@ end
     @test @inferred(f(v)) === v
 end
 
+struct Shift
+    c::Float64
+end
+(s::Shift)(x::Float64) = x - s.c
+call_local_wrapper(x) = FunctionWrapper{Float64,Tuple{Float64}}(Shift(x))(2x)
+
+@testset "Wrapper built and called in the same function" begin
+    @test call_local_wrapper(1.5) === 1.5
+end
+
 @testset "FunctionWrapper is public API" begin
     # Public, but deliberately not exported: `using FunctionWrappers` must not
     # introduce the name into the caller's namespace, since `FunctionWrapper` is a
