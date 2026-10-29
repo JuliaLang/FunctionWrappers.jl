@@ -101,13 +101,23 @@ Base.convert(::Type{T}, obj::T) where {T<:FunctionWrapper} = obj
     eval(Meta.parse("public FunctionWrapper"))
 end
 
-@noinline function reinit_wrapper(f::FunctionWrapper{Ret,Args}) where {Ret,Args}
-    objref = f.obj
-    objT = f.objT
-    ptr = gen_fptr(Ret, Args, objT)::Ptr{Cvoid}
-    f.ptr = ptr
-    f.objptr = Base.unsafe_convert(Ref{objT}, objref)
-    return ptr
+struct Reinitialized <: Exception end
+
+# Always throws, so a call with an `objT` known only at run time is inferred as never
+# returning, which `--trim` verification accepts.
+@noinline function reinit_and_throw(f::FunctionWrapper{Ret,Args}, ::Type{objT}) where {Ret,Args,objT}
+    f.ptr = gen_fptr(Ret, Args, objT)
+    f.objptr = Base.unsafe_convert(Ref{objT}, f.obj)
+    throw(Reinitialized())
+end
+
+@noinline function reinit_wrapper(f::FunctionWrapper)
+    try
+        reinit_and_throw(f, f.objT)
+    catch e
+        e isa Reinitialized || rethrow()
+    end
+    return f.ptr
 end
 
 @generated function do_ccall(f::FunctionWrapper{Ret,Args}, args) where {Ret,Args}
