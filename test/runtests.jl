@@ -112,3 +112,32 @@ end
         @test :FunctionWrapper in names(FunctionWrappers)
     end
 end
+
+make_copied_wrapper(k) = deepcopy(FunctionWrapper{Float64,Tuple{}}(() -> k))
+
+@testset "deepcopy" begin
+    # The copy calls its own copy of the wrapped object
+    let n = Ref(0)
+        f = FunctionWrapper{Int,Tuple{}}(() -> (n[] += 1))
+        g = deepcopy(f)
+        @test g() == 1
+        @test n[] == 0
+        @test f() == 1
+        @test n[] == 1
+    end
+
+    # The copy stays valid after the original is garbage collected
+    gs = [make_copied_wrapper(2.0) for _ in 1:20]
+    for _ in 1:5
+        GC.gc(true)
+        junk = [Ref(-1.0) for _ in 1:200_000]
+    end
+    @test all(g -> g() === 2.0, gs)
+
+    # A wrapper referenced twice is copied once
+    f = FunctionWrapper{Float64,Tuple{Float64}}(gen_closure(1.0))
+    v = deepcopy([f, f])
+    @test v[1] === v[2]
+    @test v[1] !== f
+    @test v[1](2.0) === 3.0
+end

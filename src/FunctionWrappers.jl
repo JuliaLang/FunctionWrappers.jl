@@ -110,6 +110,16 @@ end
     return ptr
 end
 
+# The default `deepcopy` copies `obj` but copies `ptr` and `objptr` as plain pointers, so
+# the copy would keep calling the original object, without keeping it alive. Re-derive the
+# pointers from the copy's own object.
+function Base.deepcopy_internal(f::FunctionWrapper, stackdict::IdDict)
+    haskey(stackdict, f) && return stackdict[f]
+    g = invoke(Base.deepcopy_internal, Tuple{Any,IdDict}, f, stackdict)
+    reinit_wrapper(g)
+    return g
+end
+
 @generated function do_ccall(f::FunctionWrapper{Ret,Args}, args) where {Ret,Args}
     # Has to be generated since the arguments type of `ccall` does not allow
     # anything other than tuple (i.e. `@pure` function doesn't work).
