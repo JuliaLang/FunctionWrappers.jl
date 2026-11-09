@@ -53,6 +53,36 @@ end
     @test FunctionWrappers.identityAnyAny(1) === 1
 end
 
+mutable struct Counter
+    n::Int
+end
+(c::Counter)(x::Int) = (c.n += x; c.n)
+
+@testset "Re-initialize null pointers" begin
+    c = Counter(10)
+    for (f, x, y) in ((FunctionWrapper{Int,Tuple{Int}}(c), 1, 11),
+                      (F64F64Func(gen_closure(2.0)), 1.0, 3.0))
+        f.ptr = C_NULL
+        f.objptr = C_NULL
+        @test f(x) === y
+        @test f.ptr != C_NULL
+    end
+    @test c.n == 11
+end
+
+@static if VERSION >= v"1.12"
+    # `--trim` verification accepts a run-time dispatch only if it is inferred as never returning.
+    callee(f::GlobalRef) = getfield(f.mod, f.name)
+    callee(f) = f
+    @testset "Run-time dispatch in reinit_wrapper never returns" begin
+        ci = first(code_typed(FunctionWrappers.reinit_wrapper, (F64F64Func,)))[1]
+        dynamic = [i for (i, s) in pairs(ci.code)
+                   if Meta.isexpr(s, :call) && !(callee(s.args[1]) isa Core.Builtin)]
+        @test !isempty(dynamic)
+        @test all(i -> ci.ssavaluetypes[i] === Union{}, dynamic)
+    end
+end
+
 struct SingletonType
 end
 
